@@ -1,0 +1,7 @@
+{"id":"q1","question":"Why does RAG improve factual accuracy?","gold_doc_ids":["doc_1"]}
+{"id":"q2","question":"What is the tradeoff of adding overlap in chunking?","gold_doc_ids":["doc_2"]}
+{"id":"q3","question":"Why combine BM25 with dense retrieval?","gold_doc_ids":["doc_3"]}
+{"id":"q4","question":"How does reranking help in a RAG pipeline?","gold_doc_ids":["doc_4"]}
+{"id":"q5","question":"What metrics should be monitored in production RAG?","gold_doc_ids":["doc_8"]}
+{"id":"q6","question":"What makes MLX useful for local inference?","gold_doc_ids":["doc_6"]}
+{"id":"q7","question":"When should vLLM be used?","gold_doc_ids":["doc_7"]}

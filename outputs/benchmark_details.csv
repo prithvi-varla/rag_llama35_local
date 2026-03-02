@@ -1,0 +1,15 @@
+approach,query_id,hit_at_k,mrr,latency_ms
+A: fixed + dense,q1,1.0,1.0,0.12779200000001545
+A: fixed + dense,q2,1.0,1.0,0.11187499999998352
+A: fixed + dense,q3,1.0,1.0,0.10795799999999134
+A: fixed + dense,q4,1.0,1.0,0.11329200000001483
+A: fixed + dense,q5,1.0,1.0,0.11279200000000045
+A: fixed + dense,q6,1.0,1.0,0.10525000000000118
+A: fixed + dense,q7,1.0,1.0,0.10224999999999818
+B: semantic + hybrid + rerank,q1,1.0,1.0,0.17837499999998063
+B: semantic + hybrid + rerank,q2,1.0,1.0,0.18279200000001494
+B: semantic + hybrid + rerank,q3,1.0,1.0,0.16770799999998864
+B: semantic + hybrid + rerank,q4,1.0,1.0,0.1701249999999932
+B: semantic + hybrid + rerank,q5,1.0,1.0,0.1824159999999908
+B: semantic + hybrid + rerank,q6,1.0,1.0,0.17545799999998946
+B: semantic + hybrid + rerank,q7,1.0,1.0,0.1627080000000114

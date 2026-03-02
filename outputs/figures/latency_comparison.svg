@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="460">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<text x="450.0" y="36" text-anchor="middle" font-size="20" font-family="Arial">Average End-to-End Latency</text>
+<line x1="70" y1="390" x2="830" y2="390" stroke="#444"/>
+<line x1="70" y1="70" x2="70" y2="390" stroke="#444"/>
+<line x1="70" y1="390.00" x2="830" y2="390.00" stroke="#eee"/>
+<text x="58" y="394.00" text-anchor="end" font-size="11" font-family="Arial">0.0</text>
+<line x1="70" y1="326.00" x2="830" y2="326.00" stroke="#eee"/>
+<text x="58" y="330.00" text-anchor="end" font-size="11" font-family="Arial">0.2</text>
+<line x1="70" y1="262.00" x2="830" y2="262.00" stroke="#eee"/>
+<text x="58" y="266.00" text-anchor="end" font-size="11" font-family="Arial">0.4</text>
+<line x1="70" y1="198.00" x2="830" y2="198.00" stroke="#eee"/>
+<text x="58" y="202.00" text-anchor="end" font-size="11" font-family="Arial">0.6</text>
+<line x1="70" y1="134.00" x2="830" y2="134.00" stroke="#eee"/>
+<text x="58" y="138.00" text-anchor="end" font-size="11" font-family="Arial">0.8</text>
+<line x1="70" y1="70.00" x2="830" y2="70.00" stroke="#eee"/>
+<text x="58" y="74.00" text-anchor="end" font-size="11" font-family="Arial">1.0</text>
+<rect x="155.50" y="354.29" width="209.00" height="35.71" fill="#d95f02"/>
+<text x="260.00" y="408" text-anchor="middle" font-size="11" font-family="Arial">A: fixed + dense</text>
+<text x="260.00" y="348.29" text-anchor="middle" font-size="11" font-family="Arial">0.11 ms</text>
+<rect x="535.50" y="334.25" width="209.00" height="55.75" fill="#1b9e77"/>
+<text x="640.00" y="408" text-anchor="middle" font-size="11" font-family="Arial">B: semantic + hybrid + rerank</text>
+<text x="640.00" y="328.25" text-anchor="middle" font-size="11" font-family="Arial">0.17 ms</text>
+</svg>
