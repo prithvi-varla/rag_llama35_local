@@ -18,7 +18,8 @@ class MLXEngine(InferenceEngine):
                 "mlx-lm is not installed. Install mlx and mlx-lm to use MLX inference."
             ) from exc
 
-        model, tokenizer = load(self.model_path)
+        load_result = load(self.model_path)
+        model, tokenizer = load_result[0], load_result[1]
 
         context_block = "\n\n".join(
             [f"[{r.chunk.doc_id}] {r.chunk.title}\n{r.chunk.text}" for r in contexts]
@@ -30,10 +31,29 @@ class MLXEngine(InferenceEngine):
             f"Question: {query}\nAnswer:"
         )
 
-        return generate(
-            model,
-            tokenizer,
-            prompt=prompt,
-            max_tokens=max_new_tokens,
-            temp=temperature,
-        )
+        try:
+            return generate(
+                model,
+                tokenizer,
+                prompt=prompt,
+                max_tokens=max_new_tokens,
+                temp=temperature,
+            )
+        except TypeError:
+            try:
+                # Compatibility for mlx-lm versions that renamed `temp` -> `temperature`.
+                return generate(
+                    model,
+                    tokenizer,
+                    prompt=prompt,
+                    max_tokens=max_new_tokens,
+                    temperature=temperature,
+                )
+            except TypeError:
+                # Compatibility for versions that do not expose temperature argument.
+                return generate(
+                    model,
+                    tokenizer,
+                    prompt=prompt,
+                    max_tokens=max_new_tokens,
+                )

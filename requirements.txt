@@ -1,6 +1,11 @@
+# Core dependencies
 fastapi
 uvicorn
 pydantic
 pyyaml
 httpx
 pytest
+
+# Apple Silicon local inference (macOS M-series only)
+mlx
+mlx-lm
