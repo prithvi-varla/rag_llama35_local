@@ -12,6 +12,7 @@ from rag_app.engines.vllm_engine import VLLMEngine
 
 
 def build_engine(settings) -> InferenceEngine:
+    """Creates the configured inference backend (mlx, vllm, or mock)."""
     engine_name = settings.inference.get("engine", "mock")
     if engine_name == "mlx":
         return MLXEngine(settings.inference["mlx"]["model_path"])
@@ -25,6 +26,7 @@ def build_engine(settings) -> InferenceEngine:
 
 
 def main() -> None:
+    """Parses CLI args, runs one RAG query, and prints answer + citations."""
     parser = argparse.ArgumentParser(description="Run one local RAG query")
     parser.add_argument("--settings", default="config/settings.yaml")
     parser.add_argument("--query", required=True)
@@ -46,9 +48,10 @@ def main() -> None:
         dense_top_k=settings.retrieval["dense_top_k"],
         rerank_top_k=settings.retrieval["rerank_top_k"],
         enforce_citations=validation.get("enforce_citations", True),
-        validation_min_hits=validation.get("min_supported_chunks", 1),
-        validation_min_overlap_terms=validation.get("min_overlap_terms", 2),
-        validation_min_score=validation.get("min_retrieval_score", 0.01),
+        validation_min_supported_chunks=validation.get("min_supported_chunks", 1),
+        validation_min_relevance_score=validation.get("min_relevance_score", 0.25),
+        embedding_model=settings.retrieval.get("embedding_model", "sentence-transformers/all-MiniLM-L6-v2"),
+        reranker_model=settings.retrieval.get("reranker_model", "cross-encoder/ms-marco-MiniLM-L-6-v2"),
     )
 
     result = pipeline.answer(

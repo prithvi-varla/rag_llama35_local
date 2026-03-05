@@ -12,6 +12,7 @@ from rag_app.engines.mock_engine import MockEngine
 
 
 def evaluate_pipeline(name: str, pipeline: RAGPipeline, eval_rows) -> List[Dict[str, float]]:
+    """Runs one retrieval approach across eval queries and records metrics."""
     records: List[Dict[str, float]] = []
 
     for row in eval_rows:
@@ -32,12 +33,14 @@ def evaluate_pipeline(name: str, pipeline: RAGPipeline, eval_rows) -> List[Dict[
 
 
 def plot_metrics(summary_rows: List[Dict[str, float]], output_dir: Path) -> None:
+    """Writes comparison charts for quality and latency."""
     output_dir.mkdir(parents=True, exist_ok=True)
     _write_quality_svg(summary_rows, output_dir / "quality_comparison.svg")
     _write_latency_svg(summary_rows, output_dir / "latency_comparison.svg")
 
 
 def main() -> None:
+    """Executes baseline vs hybrid benchmark and saves CSV/SVG artifacts."""
     parser = argparse.ArgumentParser(description="Benchmark baseline vs hybrid RAG")
     parser.add_argument("--settings", default="config/settings.yaml")
     args = parser.parse_args()
@@ -58,9 +61,10 @@ def main() -> None:
         dense_top_k=settings.retrieval["dense_top_k"],
         rerank_top_k=settings.retrieval["rerank_top_k"],
         enforce_citations=validation.get("enforce_citations", True),
-        validation_min_hits=validation.get("min_supported_chunks", 1),
-        validation_min_overlap_terms=validation.get("min_overlap_terms", 2),
-        validation_min_score=validation.get("min_retrieval_score", 0.01),
+        validation_min_supported_chunks=validation.get("min_supported_chunks", 1),
+        validation_min_relevance_score=validation.get("min_relevance_score", 0.25),
+        embedding_model=settings.retrieval.get("embedding_model", "sentence-transformers/all-MiniLM-L6-v2"),
+        reranker_model=settings.retrieval.get("reranker_model", "cross-encoder/ms-marco-MiniLM-L-6-v2"),
     )
 
     baseline = RAGPipeline(chunk_mode="fixed", **common)
@@ -113,6 +117,7 @@ def main() -> None:
 
 
 def _write_quality_svg(summary_rows: List[Dict[str, float]], path: Path) -> None:
+    """Renders a simple SVG bar chart for Hit@K and MRR."""
     width = 900
     height = 460
     margin = 70
@@ -160,6 +165,7 @@ def _write_quality_svg(summary_rows: List[Dict[str, float]], path: Path) -> None
 
 
 def _write_latency_svg(summary_rows: List[Dict[str, float]], path: Path) -> None:
+    """Renders a simple SVG bar chart for average latency."""
     width = 900
     height = 460
     margin = 70

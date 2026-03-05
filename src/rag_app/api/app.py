@@ -32,6 +32,7 @@ class AskResponse(BaseModel):
 
 
 def _build_engine(engine_name: str, settings_model: dict, settings_inference: dict) -> InferenceEngine:
+    """Builds an inference engine from API config."""
     if engine_name == "mlx":
         return MLXEngine(settings_inference["mlx"]["model_path"])
 
@@ -46,6 +47,7 @@ def _build_engine(engine_name: str, settings_model: dict, settings_inference: di
 
 
 def create_app(settings_path: str = "config/settings.yaml") -> FastAPI:
+    """Creates and configures the FastAPI app with one shared RAG pipeline."""
     settings = load_settings(settings_path)
     engine_name = settings.inference.get("engine", "mock")
     engine = _build_engine(engine_name, settings.model, settings.inference)
@@ -65,19 +67,22 @@ def create_app(settings_path: str = "config/settings.yaml") -> FastAPI:
         dense_top_k=settings.retrieval["dense_top_k"],
         rerank_top_k=settings.retrieval["rerank_top_k"],
         enforce_citations=validation.get("enforce_citations", True),
-        validation_min_hits=validation.get("min_supported_chunks", 1),
-        validation_min_overlap_terms=validation.get("min_overlap_terms", 2),
-        validation_min_score=validation.get("min_retrieval_score", 0.01),
+        validation_min_supported_chunks=validation.get("min_supported_chunks", 1),
+        validation_min_relevance_score=validation.get("min_relevance_score", 0.25),
+        embedding_model=settings.retrieval.get("embedding_model", "sentence-transformers/all-MiniLM-L6-v2"),
+        reranker_model=settings.retrieval.get("reranker_model", "cross-encoder/ms-marco-MiniLM-L-6-v2"),
     )
 
     app = FastAPI(title="rag-llama35-local", version="1.0.0")
 
     @app.get("/health")
     def health() -> dict:
+        """Returns basic service readiness and active backend."""
         return {"status": "ok", "engine": engine_name}
 
     @app.post("/ask", response_model=AskResponse)
     def ask(req: AskRequest) -> AskResponse:
+        """Runs RAG for a user query and returns answer with used chunks."""
         result = pipeline.answer(
             query=req.query,
             max_new_tokens=settings.model.get("max_new_tokens", 384),

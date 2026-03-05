@@ -8,6 +8,7 @@ from rag_app.core.types import Document
 
 
 def load_corpus(path: str) -> List[Document]:
+    """Loads JSONL corpus rows into Document objects."""
     docs: List[Document] = []
     p = Path(path)
     with p.open("r", encoding="utf-8") as f:

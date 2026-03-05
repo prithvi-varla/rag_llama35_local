@@ -19,17 +19,18 @@ inference:
 
 retrieval:
   top_k: 5
-  bm25_top_k: 8
-  dense_top_k: 8
+  bm25_top_k: 12
+  dense_top_k: 12
   rerank_top_k: 5
   chunk_size_chars: 550
   chunk_overlap_chars: 90
+  embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+  reranker_model: "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
 validation:
   enforce_citations: true
   min_supported_chunks: 1
-  min_overlap_terms: 2
-  min_retrieval_score: 0.01
+  min_relevance_score: 0.25
 
 paths:
   corpus_path: "data/corpus.jsonl"

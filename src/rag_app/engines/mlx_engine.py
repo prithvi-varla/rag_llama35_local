@@ -8,9 +8,11 @@ from rag_app.engines.base import InferenceEngine
 
 class MLXEngine(InferenceEngine):
     def __init__(self, model_path: str) -> None:
+        """Stores the MLX model path or HF repo id."""
         self.model_path = model_path
 
     def generate(self, query: str, contexts: List[RetrievalResult], max_new_tokens: int, temperature: float) -> str:
+        """Loads MLX model and generates an answer grounded on retrieved chunks."""
         try:
             from mlx_lm import generate, load
         except Exception as exc:

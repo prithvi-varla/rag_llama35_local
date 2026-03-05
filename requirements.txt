@@ -1,11 +1,12 @@
-# Core dependencies
 fastapi
 uvicorn
 pydantic
 pyyaml
 httpx
 pytest
-
-# Apple Silicon local inference (macOS M-series only)
-mlx
-mlx-lm
+numpy
+rank-bm25
+sentence-transformers
+sentence-transformers
+rank-bm25
+numpy

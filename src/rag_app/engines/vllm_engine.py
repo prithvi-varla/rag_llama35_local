@@ -8,11 +8,13 @@ from rag_app.engines.base import InferenceEngine
 
 class VLLMEngine(InferenceEngine):
     def __init__(self, base_url: str, api_key: str, model_name: str) -> None:
+        """Stores vLLM API endpoint and model metadata."""
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.model_name = model_name
 
     def generate(self, query: str, contexts: List[RetrievalResult], max_new_tokens: int, temperature: float) -> str:
+        """Calls vLLM OpenAI-compatible endpoint to generate grounded answer."""
         try:
             import httpx
         except Exception as exc:

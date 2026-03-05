@@ -39,6 +39,7 @@ class Settings:
 
 
 def load_settings(path: str) -> Settings:
+    """Loads YAML settings with a fallback parser when PyYAML is unavailable."""
     with Path(path).open("r", encoding="utf-8") as f:
         raw = f.read()
     if yaml is not None:
@@ -47,6 +48,7 @@ def load_settings(path: str) -> Settings:
 
 
 def _simple_yaml_load(text: str) -> Dict[str, Any]:
+    """Parses simple indentation-based YAML into nested dictionaries."""
     # Minimal fallback parser for indentation-based key/value YAML mappings.
     lines = [ln.rstrip() for ln in text.splitlines() if ln.strip() and not ln.strip().startswith("#")]
     root: Dict[str, Any] = {}

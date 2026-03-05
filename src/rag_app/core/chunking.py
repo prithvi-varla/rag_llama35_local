@@ -8,6 +8,7 @@ from rag_app.core.types import Chunk, Document
 def fixed_chunk_documents(
     docs: List[Document], chunk_size_chars: int, chunk_overlap_chars: int
 ) -> List[Chunk]:
+    """Creates fixed-size chunks with overlap for recall at boundaries."""
     chunks: List[Chunk] = []
     for doc in docs:
         start = 0
@@ -33,6 +34,7 @@ def fixed_chunk_documents(
 
 
 def semantic_chunk_documents(docs: List[Document], max_chars: int = 600) -> List[Chunk]:
+    """Creates sentence-aware chunks that preserve local semantic coherence."""
     chunks: List[Chunk] = []
     for doc in docs:
         sentences = [s.strip() for s in doc.text.split(".") if s.strip()]

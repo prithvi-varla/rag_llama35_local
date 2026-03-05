@@ -17,6 +17,7 @@ class EvalQuery:
 
 
 def load_eval_queries(path: str) -> List[EvalQuery]:
+    """Loads evaluation questions and gold references from JSONL."""
     rows: List[EvalQuery] = []
     with Path(path).open("r", encoding="utf-8") as f:
         for line in f:
@@ -32,11 +33,13 @@ def load_eval_queries(path: str) -> List[EvalQuery]:
 
 
 def hit_at_k(results: List[RetrievalResult], gold_doc_ids: Iterable[str]) -> float:
+    """Returns 1 if any relevant document appears in retrieved top-k, else 0."""
     gold = set(gold_doc_ids)
     return float(any(r.chunk.doc_id in gold for r in results))
 
 
 def mrr(results: List[RetrievalResult], gold_doc_ids: Iterable[str]) -> float:
+    """Computes reciprocal rank of the first relevant retrieved document."""
     gold = set(gold_doc_ids)
     for rank, r in enumerate(results, start=1):
         if r.chunk.doc_id in gold:
@@ -45,6 +48,7 @@ def mrr(results: List[RetrievalResult], gold_doc_ids: Iterable[str]) -> float:
 
 
 def summarize(records: List[Dict[str, float]]) -> Dict[str, float]:
+    """Averages evaluation metrics across a set of records."""
     if not records:
         return {"hit_at_k": 0.0, "mrr": 0.0, "latency_ms": 0.0}
 
