@@ -2,10 +2,11 @@
 
 This repository implements **Project 1** from the transcript *"5 AI Portfolio Projects That Will Actually Get You Hired in 2026"* and uses the architecture from *"How to Build a Scalable RAG System for AI Apps (Full Architecture)"*.
 
-The goal is not a demo chatbot. The goal is a **production-style RAG system** with:
-- hybrid retrieval
-- reranking
-- citation enforcement
+The goal is not a demo chatbot. The goal is a **production-style RAG system** using **LangChain** with:
+- library-managed chunking
+- hybrid retrieval (BM25 + vector)
+- cross-encoder reranking
+- retrieval support gating
 - offline evaluation
 - API serving
 - measurable approach comparison
@@ -44,8 +45,6 @@ The goal is not a demo chatbot. The goal is a **production-style RAG system** wi
 
 Code:
 - `src/rag_app/core/io.py`
-- `src/rag_app/core/chunking.py`
-- `src/rag_app/core/retrieval.py`
 - `scripts/run_query.py`
 
 ## Phase 2: Production Retrieval Quality
@@ -54,10 +53,7 @@ Code:
 - **Citation enforcement**: decline when support is weak.
 
 Code:
-- `src/rag_app/core/retrieval.py`
-- `src/rag_app/core/rerank.py`
-- `src/rag_app/core/validation.py`
-- `src/rag_app/core/pipeline.py`
+- `src/rag_app/core/pipeline.py` (LangChain splitter + retrievers + reranker + filter)
 
 ## Phase 3: Shippable Evaluation Discipline
 - Golden eval query set (`data/eval_queries.jsonl`).
@@ -76,9 +72,9 @@ Code:
 
 Implemented directly:
 - retrieval -> augmentation -> generation loop
-- hybrid retrieval (semantic + keyword)
-- reranking layer
-- validation nodes (gatekeeper/auditor/strategist heuristics)
+- LangChain hybrid retrieval (BM25 + vector)
+- LangChain cross-encoder reranking
+- LangChain embeddings filter + support threshold gating
 - quantitative evaluation + latency tracking
 
 Represented in repo design (simplified for local run):

@@ -21,9 +21,8 @@ This file is that summary.
 - clear "implemented now" vs "next iteration" boundaries
 - local run + benchmark + API usage instructions
 
-## 2) Production-Style Validation Added
+## 2) LangChain-Native Retrieval + Gating
 New file:
-- `src/rag_app/core/validation.py`
 
 Validation nodes added (lightweight heuristics matching transcript intent):
 - `gatekeeper`: confirms retrieved chunks support query terms
@@ -37,7 +36,7 @@ Updated:
 - `src/rag_app/core/pipeline.py`
 
 Behavior:
-- runs validation before generation
+- uses LangChain retrieval + reranking + filtering
 - returns safe decline response if evidence is weak
 
 ## 4) Configurable Validation Thresholds

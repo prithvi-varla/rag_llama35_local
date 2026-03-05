@@ -5,8 +5,12 @@ pyyaml
 httpx
 pytest
 numpy
+langchain
+langchain-core
+langchain-community
+langchain-huggingface
+langchain-chroma
+langchain-text-splitters
+chromadb
 rank-bm25
 sentence-transformers
-sentence-transformers
-rank-bm25
-numpy
