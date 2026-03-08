@@ -32,6 +32,14 @@ validation:
   min_supported_chunks: 1
   min_relevance_score: 0.25
 
+observability:
+  enabled: true
+  langfuse_public_key: "pk-lf-42e88a3f-9965-46ea-a56d-af9d25836777"
+  langfuse_secret_key: "sk-lf-ef1dd951-56d1-4334-bec9-daec3513d195"
+  langfuse_host: "https://us.cloud.langfuse.com"
+  debug: false
+  
+
 paths:
   corpus_path: "data/corpus.jsonl"
   eval_path: "data/eval_queries.jsonl"

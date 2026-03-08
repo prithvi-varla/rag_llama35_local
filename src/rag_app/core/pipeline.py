@@ -17,6 +17,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from rag_app.core.io import load_corpus
+from rag_app.core.observability import RAGObservability
 from rag_app.core.types import Chunk, GenerationResult, RetrievalResult
 from rag_app.engines.base import InferenceEngine
 
@@ -40,12 +41,14 @@ class RAGPipeline:
         validation_min_relevance_score: float = 0.25,
         embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2",
         reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2",
+        observability: RAGObservability | None = None,
     ) -> None:
         """Builds one shared LangChain retrieval graph and keeps it in memory for reuse."""
         self.engine = engine
         self.top_k = top_k
         self.enforce_citations = enforce_citations
         self.validation_min_supported_chunks = validation_min_supported_chunks
+        self.observability = observability
 
         docs = load_corpus(corpus_path)
         lc_docs = [
@@ -129,10 +132,24 @@ class RAGPipeline:
     def answer(self, query: str, max_new_tokens: int = 384, temperature: float = 0.1) -> GenerationResult:
         """Answers using retrieved LangChain chunks, or safely declines when support is low."""
         start = time.perf_counter()
-        retrieved = self.retrieve(query)
+        trace_ctx = {}
+        if self.observability is not None:
+            trace_ctx = self.observability.start_query_trace(query, metadata={"top_k": self.top_k})
+
+        try:
+            retrieved = self.retrieve(query)
+            if self.observability is not None:
+                self.observability.log_retrieval(trace_ctx, retrieved)
+        except Exception as exc:
+            if self.observability is not None:
+                self.observability.finalize_error(trace_ctx, f"retrieve_failed: {exc}")
+            raise
 
         if self.enforce_citations and len(retrieved) < self.validation_min_supported_chunks:
             latency_ms = (time.perf_counter() - start) * 1000
+            if self.observability is not None:
+                self.observability.log_validation(trace_ctx, passed=False, reason="insufficient_supported_chunks")
+                self.observability.finalize_success(trace_ctx, "declined_due_to_low_support", latency_ms)
             return GenerationResult(
                 answer=(
                     "I do not have enough grounded evidence in retrieved documents to answer safely. "
@@ -142,6 +159,16 @@ class RAGPipeline:
                 latency_ms=latency_ms,
             )
 
-        answer = self.engine.generate(query, retrieved, max_new_tokens=max_new_tokens, temperature=temperature)
-        latency_ms = (time.perf_counter() - start) * 1000
-        return GenerationResult(answer=answer, used_chunks=retrieved, latency_ms=latency_ms)
+        if self.observability is not None:
+            self.observability.log_validation(trace_ctx, passed=True, reason="support_ok")
+
+        try:
+            answer = self.engine.generate(query, retrieved, max_new_tokens=max_new_tokens, temperature=temperature)
+            latency_ms = (time.perf_counter() - start) * 1000
+            if self.observability is not None:
+                self.observability.finalize_success(trace_ctx, answer, latency_ms)
+            return GenerationResult(answer=answer, used_chunks=retrieved, latency_ms=latency_ms)
+        except Exception as exc:
+            if self.observability is not None:
+                self.observability.finalize_error(trace_ctx, f"generate_failed: {exc}")
+            raise

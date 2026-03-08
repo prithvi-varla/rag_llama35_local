@@ -34,6 +34,10 @@ class Settings:
         return self.raw.get("validation", {})
 
     @property
+    def observability(self) -> Dict[str, Any]:
+        return self.raw.get("observability", {})
+
+    @property
     def paths(self) -> Dict[str, Any]:
         return self.raw["paths"]
 

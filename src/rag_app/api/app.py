@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from rag_app.core.config import load_settings
+from rag_app.core.observability import RAGObservability
 from rag_app.core.pipeline import RAGPipeline
 from rag_app.engines.base import InferenceEngine
 from rag_app.engines.mlx_engine import MLXEngine
@@ -52,6 +53,7 @@ def create_app(settings_path: str = "config/settings.yaml") -> FastAPI:
     engine_name = settings.inference.get("engine", "mock")
     engine = _build_engine(engine_name, settings.model, settings.inference)
     validation = settings.validation
+    observability = RAGObservability.from_settings(settings)
 
     root = Path(settings_path).resolve().parent.parent
     corpus_path = (root / settings.paths["corpus_path"]).as_posix()
@@ -71,6 +73,7 @@ def create_app(settings_path: str = "config/settings.yaml") -> FastAPI:
         validation_min_relevance_score=validation.get("min_relevance_score", 0.25),
         embedding_model=settings.retrieval.get("embedding_model", "sentence-transformers/all-MiniLM-L6-v2"),
         reranker_model=settings.retrieval.get("reranker_model", "cross-encoder/ms-marco-MiniLM-L-6-v2"),
+        observability=observability,
     )
 
     app = FastAPI(title="rag-llama35-local", version="1.0.0")

@@ -4,6 +4,7 @@ import argparse
 from pathlib import Path
 
 from rag_app.core.config import load_settings
+from rag_app.core.observability import RAGObservability
 from rag_app.core.pipeline import RAGPipeline
 from rag_app.engines.base import InferenceEngine
 from rag_app.engines.mlx_engine import MLXEngine
@@ -36,6 +37,7 @@ def main() -> None:
     settings = load_settings(args.settings)
     root = Path(args.settings).resolve().parent.parent
     validation = settings.validation
+    observability = RAGObservability.from_settings(settings)
 
     pipeline = RAGPipeline(
         corpus_path=(root / settings.paths["corpus_path"]).as_posix(),
@@ -52,6 +54,7 @@ def main() -> None:
         validation_min_relevance_score=validation.get("min_relevance_score", 0.25),
         embedding_model=settings.retrieval.get("embedding_model", "sentence-transformers/all-MiniLM-L6-v2"),
         reranker_model=settings.retrieval.get("reranker_model", "cross-encoder/ms-marco-MiniLM-L-6-v2"),
+        observability=observability,
     )
 
     result = pipeline.answer(

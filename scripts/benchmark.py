@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from rag_app.core.config import load_settings
+from rag_app.core.observability import RAGObservability
 from rag_app.core.eval import hit_at_k, load_eval_queries, mrr, summarize
 from rag_app.core.pipeline import RAGPipeline
 from rag_app.engines.mock_engine import MockEngine
@@ -48,6 +49,7 @@ def main() -> None:
     settings = load_settings(args.settings)
     root = Path(args.settings).resolve().parent.parent
     validation = settings.validation
+    observability = RAGObservability.from_settings(settings)
 
     eval_rows = load_eval_queries((root / settings.paths["eval_path"]).as_posix())
 
@@ -65,6 +67,7 @@ def main() -> None:
         validation_min_relevance_score=validation.get("min_relevance_score", 0.25),
         embedding_model=settings.retrieval.get("embedding_model", "sentence-transformers/all-MiniLM-L6-v2"),
         reranker_model=settings.retrieval.get("reranker_model", "cross-encoder/ms-marco-MiniLM-L-6-v2"),
+        observability=observability,
     )
 
     baseline = RAGPipeline(chunk_mode="fixed", **common)
