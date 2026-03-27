@@ -1,130 +1,80 @@
-# AI Portfolio 2026: Production RAG Project (Built from Transcript Requirements)
+# Local RAG App
 
-This repository implements **Project 1** from the transcript *"5 AI Portfolio Projects That Will Actually Get You Hired in 2026"* and uses the architecture from *"How to Build a Scalable RAG System for AI Apps (Full Architecture)"*.
+This project is a local Python RAG application with three main parts: retrieval, generation, and observability.
 
-The goal is not a demo chatbot. The goal is a **production-style RAG system** using **LangChain** with:
-- library-managed chunking
-- hybrid retrieval (BM25 + vector)
-- cross-encoder reranking
-- retrieval support gating
-- offline evaluation
-- API serving
-- measurable approach comparison
+It loads source documents from `data/corpus.jsonl`, splits them into chunks with LangChain, indexes them into an in-process Chroma vector store, combines dense retrieval with BM25 in hybrid mode, reranks with a cross-encoder, and then sends the retrieved context to an LLM backend.
 
-## The 5 Portfolio Projects (Transcript-Aligned)
+Supported generation backends are `mock`, `mlx`, and `vllm`. Langfuse is integrated as optional observability and should never break runtime if it fails.
 
-1. **Production-Grade RAG System**
-- This repo is the implementation.
-- Focus: retrieval quality, grounded answers, evaluation discipline.
+## Current Architecture
 
-2. **Local Offline Assistant (3B-7B model)**
-- Build local CLI/API assistant with schema-constrained outputs.
-- Benchmark tokens/sec, latency, and quality across models.
+- Source data is stored in `data/corpus.jsonl`.
+- Evaluation questions are stored in `data/eval_queries.jsonl`.
+- Runtime retrieval pipeline is implemented in [pipeline.py](/Users/prithvirajvarla/Documents/Playground/rag_llama35_local/src/rag_app/core/pipeline.py).
+- Observability wrapper is implemented in [observability.py](/Users/prithvirajvarla/Documents/Playground/rag_llama35_local/src/rag_app/core/observability.py).
+- API entrypoint is [app.py](/Users/prithvirajvarla/Documents/Playground/rag_llama35_local/src/rag_app/api/app.py).
+- CLI query runner is [run_query.py](/Users/prithvirajvarla/Documents/Playground/rag_llama35_local/scripts/run_query.py).
+- Benchmark runner is [benchmark.py](/Users/prithvirajvarla/Documents/Playground/rag_llama35_local/scripts/benchmark.py).
 
-3. **RAG Monitoring + Observability**
-- Add tracing, citation coverage, p50/p95 latency, failure-rate dashboards.
-- Add regression gates in CI.
+## How Data Is Stored
 
-4. **Task-Specific Fine-Tuning (LoRA)**
-- Improve a narrow task (e.g., extraction/tool-call accuracy).
-- Compare base vs tuned with quantitative metrics.
+Persistent source data lives in `data/corpus.jsonl`.
 
-5. **Agentic Workflow System**
-- Multi-step planner/executor pipeline with tool use, retries, and safety guards.
-- Evaluate reliability and failure modes under adversarial prompts.
+At runtime, the app:
+- reads the JSONL file,
+- converts rows into LangChain documents,
+- splits them into chunks,
+- adds those chunks into a Chroma store created in memory.
 
----
+The current Chroma store is not persisted to disk because no `persist_directory` is configured. That means the index is rebuilt on each app start.
 
-## Project 1 Design (Phased, as described in transcript)
+## Retrieval Flow
 
-## Phase 1: Core RAG Fundamentals
-- Document ingestion from JSONL corpus.
-- Chunking with overlap.
-- Dense retrieval baseline.
-- Context-grounded answer generation with cited chunks.
+In `semantic` mode, the app:
+- chunks documents with `RecursiveCharacterTextSplitter`,
+- embeds chunks with `HuggingFaceEmbeddings`,
+- stores vectors in Chroma,
+- retrieves with both BM25 and vector similarity,
+- combines them with `EnsembleRetriever`,
+- reranks with `CrossEncoderReranker`,
+- filters weak matches with `EmbeddingsFilter`.
 
-Code:
-- `src/rag_app/core/io.py`
-- `scripts/run_query.py`
+In `fixed` mode, the app uses only dense retrieval over the same chunked/indexed data path.
 
-## Phase 2: Production Retrieval Quality
-- **Hybrid retrieval**: keyword + semantic scoring.
-- **Reranking**: rescoring candidates for precision.
-- **Citation enforcement**: decline when support is weak.
+## Generation Flow
 
-Code:
-- `src/rag_app/core/pipeline.py` (LangChain splitter + retrievers + reranker + filter)
+After retrieval, the selected backend generates the answer:
+- `mock` returns a deterministic mock response,
+- `mlx` loads a local MLX model and generates on Apple Silicon,
+- `vllm` calls an OpenAI-compatible vLLM server.
 
-## Phase 3: Shippable Evaluation Discipline
-- Golden eval query set (`data/eval_queries.jsonl`).
-- Offline benchmark script.
-- Output artifacts for quality + latency comparison.
+The MLX model path is configured in `config/settings.yaml` as `mlx-community/Llama-3.2-3B-Instruct-4bit`.
 
-Code:
-- `src/rag_app/core/eval.py`
-- `scripts/benchmark.py`
-- `outputs/benchmark_summary.csv`
-- `outputs/figures/*.svg`
+## Observability
 
----
+Langfuse is optional.
 
-## Scalable RAG Architecture Mapping (Second Transcript)
+If enabled and configured, the app records:
+- query start,
+- retrieval event,
+- validation event,
+- completion or error event.
 
-Implemented directly:
-- retrieval -> augmentation -> generation loop
-- LangChain hybrid retrieval (BM25 + vector)
-- LangChain cross-encoder reranking
-- LangChain embeddings filter + support threshold gating
-- quantitative evaluation + latency tracking
+If Langfuse is unavailable, misconfigured, or throws SDK errors, the app continues running without failing the request.
 
-Represented in repo design (simplified for local run):
-- structure-aware chunking mode (`semantic`)
-- configurable validation thresholds in `config/settings.yaml`
-- API serving surface for production integration
+Configuration lives in `config/settings.yaml` under `observability`.
 
-Not fully implemented yet (noted for next iteration):
-- real table-aware parser for PDFs/HTML
-- full planner + multi-agent orchestration
-- prompt injection red-team harness
-- online tracing stack (Langfuse/LangSmith)
-
----
-
-## Inference Backends
-
-- `mock` for offline development/evaluation.
-- `mlx` for Apple Silicon local inference.
-- `vllm` for high-throughput serving.
-
-Configured in `config/settings.yaml`.
-
-Model note:
-- Requested: "llama3.5b class"
-- Practical default used: Llama 3.x 3B-class checkpoint (`meta-llama/Llama-3.2-3B-Instruct`) because 3.5B is not a standard public release tier.
-
----
-
-## Quick Start
+## Setup
 
 ```bash
 cd /Users/prithvirajvarla/Documents/Playground/rag_llama35_local
-python3 -m venv .venv
-source .venv/bin/activate
+python3 -m venv venv
+source venv/bin/activate
 pip install -U pip
 pip install -r requirements.txt
 ```
 
-Optional real engines:
-
-```bash
-# Apple Silicon local inference
-pip install mlx mlx-lm
-
-# vLLM serving stack
-pip install vllm
-```
-
-Run one query:
+## Run A Query
 
 ```bash
 PYTHONPATH=src python3 scripts/run_query.py \
@@ -133,54 +83,44 @@ PYTHONPATH=src python3 scripts/run_query.py \
   --query "Why combine BM25 with dense retrieval?"
 ```
 
-Run benchmark + generate comparison graphs:
-
-```bash
-PYTHONPATH=src python3 scripts/benchmark.py --settings config/settings.yaml
-```
-
-Start API:
+## Start The API
 
 ```bash
 PYTHONPATH=src uvicorn rag_app.api:app --host 0.0.0.0 --port 8000
 ```
 
-Call API:
+## Benchmark
 
 ```bash
-curl -X POST http://127.0.0.1:8000/ask \
-  -H "content-type: application/json" \
-  -d '{"query":"What metrics should be monitored in production RAG?"}'
+PYTHONPATH=src python3 scripts/benchmark.py --settings config/settings.yaml
 ```
 
----
-
-## Approach Comparison Outputs
-
-Generated files:
+Outputs are written to:
 - `outputs/benchmark_details.csv`
 - `outputs/benchmark_summary.csv`
 - `outputs/figures/quality_comparison.svg`
 - `outputs/figures/latency_comparison.svg`
 
-Interpretation:
-- Use quality metrics (`Hit@K`, `MRR`) to justify retrieval design.
-- Use latency metrics to validate SLA impact.
-- Keep hybrid+rereank when quality gain justifies latency overhead.
+## Configuration
 
----
+Main config file: [settings.yaml](/Users/prithvirajvarla/Documents/Playground/rag_llama35_local/config/settings.yaml)
 
-## Production Notes
+Important sections:
+- `inference`: backend selection and backend-specific settings
+- `retrieval`: chunking, embedding, reranker, and top-k settings
+- `validation`: minimum support thresholds
+- `observability`: Langfuse settings
+- `paths`: corpus, eval, and output paths
 
-Current production-style controls:
-- config-driven architecture
-- runtime backend swap (`mock` / `mlx` / `vllm`)
-- citation enforcement with safe-decline behavior
-- API health endpoint and typed API responses
-- offline benchmark artifacts for regression tracking
+## Dependencies
 
-Recommended next additions:
-1. CI regression gate using benchmark thresholds.
-2. Full tracing + token cost telemetry.
-3. Prompt version files and A/B prompt testing.
-4. Red-team prompt injection and data leakage tests.
+Current runtime depends on:
+- LangChain
+- Chroma
+- sentence-transformers
+- rank-bm25
+- FastAPI
+- Langfuse
+- MLX or vLLM depending on backend choice
+
+Dependency list is in [requirements.txt](/Users/prithvirajvarla/Documents/Playground/rag_llama35_local/requirements.txt).
